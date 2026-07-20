@@ -1,0 +1,145 @@
+#!/usr/bin/env bash
+#
+# lidawake — keep an Apple Silicon MacBook running with the lid CLOSED, on battery,
+#            with no external display, keyboard, mouse, or power required.
+#
+# The whole trick is one built-in macOS command:  pmset -b disablesleep 1
+# which tells the power manager to ignore the lid switch while on battery.
+# lidawake wraps that with an idle-sleep guard (caffeinate) and, importantly,
+# an automatic-revert safety net so you never leave your Mac in a state where
+# it refuses to sleep after you're done.
+#
+# MIT License. No warranty. See README.
+#
+set -euo pipefail
+
+VERSION="1.0.0"
+STATE_DIR="${HOME}/.lidawake"
+PID_FILE="${STATE_DIR}/caffeinate.pid"
+WATCHDOG_PID_FILE="${STATE_DIR}/watchdog.pid"
+
+mkdir -p "$STATE_DIR"
+
+# ---- helpers ---------------------------------------------------------------
+
+err()  { printf 'lidawake: %s\n' "$*" >&2; }
+info() { printf '%s\n' "$*"; }
+
+require_macos() {
+  if [[ "$(uname -s)" != "Darwin" ]]; then
+    err "this tool only runs on macOS."
+    exit 1
+  fi
+}
+
+# Is disablesleep currently on? pmset -g returns "SleepDisabled  1" when active.
+is_disabled() {
+  pmset -g | awk '/SleepDisabled/{print $2}' | grep -q '^1$'
+}
+
+caffeinate_running() {
+  [[ -f "$PID_FILE" ]] && kill -0 "$(cat "$PID_FILE")" 2>/dev/null
+}
+
+start_caffeinate() {
+  # -i prevents idle system sleep (works on battery); -m keeps disk awake.
+  # Without this, disablesleep stops LID sleep but the system could still
+  # idle-sleep after the display-off timeout.
+  caffeinate -im &
+  echo $! > "$PID_FILE"
+}
+
+stop_caffeinate() {
+  if caffeinate_running; then
+    kill "$(cat "$PID_FILE")" 2>/dev/null || true
+  fi
+  rm -f "$PID_FILE"
+}
+
+# ---- commands --------------------------------------------------------------
+
+cmd_on() {
+  require_macos
+  local minutes="${1:-0}"   # optional auto-revert timeout in minutes; 0 = none
+
+  info "Enabling closed-lid mode (requires admin password)…"
+  sudo pmset -b disablesleep 1
+
+  start_caffeinate
+
+  if [[ "$minutes" -gt 0 ]]; then
+    # Watchdog: auto-revert after N minutes so a forgotten session can't
+    # keep the Mac awake (and hot) indefinitely in your bag.
+    ( sleep $(( minutes * 60 )); "$0" off >/dev/null 2>&1 ) &
+    echo $! > "$WATCHDOG_PID_FILE"
+    info "ON. Will auto-revert after ${minutes} min. Close the lid whenever."
+  else
+    info "ON. Closed-lid mode active on battery. Run 'lidawake off' when done."
+  fi
+
+  cat <<'NOTE'
+
+  ⚠  Heat: with the lid shut and no external display, a busy CPU traps heat
+     between screen and keyboard. Don't bury a heavy job in a sealed, padded
+     bag for long. Give it some airflow.
+NOTE
+}
+
+cmd_off() {
+  require_macos
+  info "Reverting to normal sleep behavior…"
+  sudo pmset -b disablesleep 0
+  stop_caffeinate
+
+  if [[ -f "$WATCHDOG_PID_FILE" ]]; then
+    kill "$(cat "$WATCHDOG_PID_FILE")" 2>/dev/null || true
+    rm -f "$WATCHDOG_PID_FILE"
+  fi
+  info "OFF. Your Mac will sleep normally when the lid closes."
+}
+
+cmd_status() {
+  require_macos
+  if is_disabled; then
+    info "closed-lid mode: ON  (lid switch is being ignored on battery)"
+  else
+    info "closed-lid mode: OFF (normal — closing the lid sleeps the Mac)"
+  fi
+  if caffeinate_running; then
+    info "idle guard:      running (pid $(cat "$PID_FILE"))"
+  else
+    info "idle guard:      not running"
+  fi
+  if [[ -f "$WATCHDOG_PID_FILE" ]] && kill -0 "$(cat "$WATCHDOG_PID_FILE")" 2>/dev/null; then
+    info "auto-revert:     armed (pid $(cat "$WATCHDOG_PID_FILE"))"
+  fi
+}
+
+cmd_help() {
+  cat <<EOF
+lidawake $VERSION — run your MacBook lid-closed, on battery, no dongle.
+
+USAGE
+  lidawake on [MINUTES]   enable closed-lid mode; optional auto-revert timer
+  lidawake off            disable and return to normal sleep
+  lidawake status         show current state
+  lidawake help           this text
+
+EXAMPLES
+  lidawake on             keep running until you turn it off
+  lidawake on 90          keep running for 90 min, then auto-revert (safer)
+  lidawake off            done — sleep normally again
+
+Requires an admin password (uses sudo pmset). macOS / Apple Silicon.
+EOF
+}
+
+# ---- dispatch --------------------------------------------------------------
+
+case "${1:-help}" in
+  on)     shift; cmd_on "${1:-0}" ;;
+  off)    cmd_off ;;
+  status) cmd_status ;;
+  -v|--version) echo "lidawake $VERSION" ;;
+  help|-h|--help|*) cmd_help ;;
+esac
