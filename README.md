@@ -20,23 +20,32 @@ This is the open-source, software-only answer to the "MacBook Lid Lock" idea. It
 
 ## Install
 
-There's nothing to install. Make it executable and run it in place:
+One command:
 
 ```bash
-chmod +x lidawake
-./lidawake on
+curl -fsSL https://raw.githubusercontent.com/Vasiniks/lidawake/main/install.sh | bash
+```
+
+That drops `lidawake` onto your PATH so you can run it from anywhere. Then:
+
+```bash
+lidawake on 90
 ```
 
 It asks for your admin password once, because the one command that overrides the
-lid switch — `pmset -b disablesleep` — is root-only in macOS. You don't run the
-script as root; it calls `sudo` itself, only around that single line.
+lid switch — `pmset -b disablesleep` — is root-only in macOS. You don't run
+`lidawake` as root; it calls `sudo` itself, only around that single line.
 
-**Optional:** if you'd rather type `lidawake` from anywhere instead of `./lidawake`,
-copy it onto your PATH (this is just convenience, not a requirement):
+<details>
+<summary>Prefer not to pipe to bash? Install manually.</summary>
 
 ```bash
-sudo cp lidawake /usr/local/bin/   # then: lidawake on
+curl -fsSL -o lidawake https://raw.githubusercontent.com/Vasiniks/lidawake/main/lidawake
+chmod +x lidawake
+sudo mv lidawake /usr/local/bin/   # or run it in place with ./lidawake
 ```
+
+</details>
 
 ## Usage
 
