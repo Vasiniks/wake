@@ -20,9 +20,22 @@ This is the open-source, software-only answer to the "MacBook Lid Lock" idea. It
 
 ## Install
 
+There's nothing to install. Make it executable and run it in place:
+
 ```bash
 chmod +x lidawake
-sudo mv lidawake /usr/local/bin/lidawake   # or anywhere on your PATH
+./lidawake on
+```
+
+It asks for your admin password once, because the one command that overrides the
+lid switch — `pmset -b disablesleep` — is root-only in macOS. You don't run the
+script as root; it calls `sudo` itself, only around that single line.
+
+**Optional:** if you'd rather type `lidawake` from anywhere instead of `./lidawake`,
+copy it onto your PATH (this is just convenience, not a requirement):
+
+```bash
+sudo cp lidawake /usr/local/bin/   # then: lidawake on
 ```
 
 ## Usage
@@ -58,10 +71,6 @@ It asks for your admin password because `pmset` needs `sudo`.
 sudo rm /usr/local/bin/lidawake
 rm -rf ~/.lidawake
 ```
-
-## The "physical key" version
-
-If you still want the plug-in-a-dongle experience from the original concept, the honest product is: this logic + a companion app that watches for a specific USB-C device and calls `lidawake on` / `off` on insert/removal. The hard electronics (DisplayPort/EDID emulation) aren't needed — the device is just an arm/disarm switch. That's a much smaller build than a fake-monitor PCB.
 
 ## License
 
