@@ -1,10 +1,10 @@
-# lidawake
+# adenosine
 
 **Keep your MacBook running with the lid closed — on battery, with nothing plugged in.**
 
 No external display, no keyboard, no charger, no dongle. Close the lid, put it in your bag, and your download, build, or SSH session keeps going.
 
-macOS can already do this — it's just switched off by default behind a power-management flag. `lidawake` flips that flag safely and flips it back when you're done.
+macOS can already do this — it's just switched off by default behind a power-management flag. `adenosine` flips that flag safely and flips it back when you're done. You drive it with the short `ads` command.
 
 ## Install
 
@@ -14,30 +14,30 @@ One command, no admin password needed:
 curl -fsSL https://raw.githubusercontent.com/Vasiniks/lidawake/main/install.sh | bash
 ```
 
-This installs `lidawake` into `~/.local/bin` (which belongs to you), so the install itself never needs `sudo`. If that folder isn't on your `PATH` yet, the installer adds it — just restart Terminal afterward.
+This installs the `ads` command into `~/.local/bin` (which belongs to you), so the install itself never needs `sudo`. If that folder isn't on your `PATH` yet, the installer adds it — just restart Terminal afterward.
 
 ## Usage
 
 ```bash
-lidawake on 90     # stay awake lid-closed, then auto-revert after 90 minutes
-lidawake on        # stay awake until you turn it off
-lidawake status    # show current state
-lidawake off       # back to normal — closing the lid sleeps the Mac
+ads on 90     # stay awake lid-closed, then auto-revert after 90 minutes
+ads on        # stay awake until you turn it off
+ads status    # show current state
+ads off       # back to normal — closing the lid sleeps the Mac
 ```
 
 Typical flow:
 
 ```bash
-lidawake on 120    # arm it for 2 hours
+ads on 120    # arm it for 2 hours
 # start your task, close the lid, walk away
-lidawake off       # done early? turn it off. Otherwise it reverts on its own.
+ads off       # done early? turn it off. Otherwise it reverts on its own.
 ```
 
-The first time you run `lidawake on`, macOS asks for your admin password. That's the **only** time a password is needed — it's required to change the lid-sleep setting. The auto-revert timer (`lidawake on 90`) is recommended so you can't accidentally leave your Mac unable to sleep in a bag.
+The first time you run `ads on`, macOS asks for your admin password. That's the **only** time a password is needed — it's required to change the lid-sleep setting. The auto-revert timer (`ads on 90`) is recommended so you can't accidentally leave your Mac unable to sleep in a bag.
 
 ## How it works
 
-`lidawake` wraps three pieces:
+`adenosine` wraps three pieces:
 
 | Piece | What it does |
 |-------|--------------|
@@ -54,8 +54,8 @@ The first time you run `lidawake on`, macOS asks for your admin password. That's
 ## Uninstall
 
 ```bash
-rm ~/.local/bin/lidawake
-rm -rf ~/.lidawake
+rm ~/.local/bin/ads
+rm -rf ~/.adenosine
 ```
 
 ## License

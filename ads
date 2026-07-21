@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 #
-# lidawake — keep an Apple Silicon MacBook running with the lid CLOSED, on battery,
-#            with no external display, keyboard, mouse, or power required.
+# adenosine (ads) — keep an Apple Silicon MacBook running with the lid CLOSED, on
+#                   battery, with no external display, keyboard, mouse, or power.
 #
 # The whole trick is one built-in macOS command:  pmset -b disablesleep 1
 # which tells the power manager to ignore the lid switch while on battery.
-# lidawake wraps that with an idle-sleep guard (caffeinate) and, importantly,
+# adenosine wraps that with an idle-sleep guard (caffeinate) and, importantly,
 # an automatic-revert safety net so you never leave your Mac in a state where
 # it refuses to sleep after you're done.
 #
@@ -14,7 +14,7 @@
 set -euo pipefail
 
 VERSION="1.0.0"
-STATE_DIR="${HOME}/.lidawake"
+STATE_DIR="${HOME}/.adenosine"
 PID_FILE="${STATE_DIR}/caffeinate.pid"
 WATCHDOG_PID_FILE="${STATE_DIR}/watchdog.pid"
 KEEPALIVE_PID_FILE="${STATE_DIR}/keepalive.pid"
@@ -23,7 +23,7 @@ mkdir -p "$STATE_DIR"
 
 # ---- helpers ---------------------------------------------------------------
 
-err()  { printf 'lidawake: %s\n' "$*" >&2; }
+err()  { printf 'ads: %s\n' "$*" >&2; }
 info() { printf '%s\n' "$*"; }
 
 require_macos() {
@@ -90,7 +90,7 @@ cmd_on() {
   local minutes="${1:-0}"   # optional auto-revert timeout in minutes; 0 = none
 
   if ! [[ "$minutes" =~ ^[0-9]+$ ]]; then
-    err "minutes must be a whole number (got: '$minutes'). Try: lidawake on 90"
+    err "minutes must be a whole number (got: '$minutes'). Try: ads on 90"
     exit 1
   fi
 
@@ -108,7 +108,7 @@ cmd_on() {
     echo $! > "$WATCHDOG_PID_FILE"
     info "ON. Will auto-revert after ${minutes} min. Close the lid whenever."
   else
-    info "ON. Closed-lid mode active on battery. Run 'lidawake off' when done."
+    info "ON. Closed-lid mode active on battery. Run 'ads off' when done."
   fi
 
   cat <<'NOTE'
@@ -152,18 +152,18 @@ cmd_status() {
 
 cmd_help() {
   cat <<EOF
-lidawake $VERSION — run your MacBook lid-closed, on battery, no dongle.
+adenosine (ads) $VERSION — run your MacBook lid-closed, on battery, no dongle.
 
 USAGE
-  lidawake on [MINUTES]   enable closed-lid mode; optional auto-revert timer
-  lidawake off            disable and return to normal sleep
-  lidawake status         show current state
-  lidawake help           this text
+  ads on [MINUTES]   enable closed-lid mode; optional auto-revert timer
+  ads off            disable and return to normal sleep
+  ads status         show current state
+  ads help           this text
 
 EXAMPLES
-  lidawake on             keep running until you turn it off
-  lidawake on 90          keep running for 90 min, then auto-revert (safer)
-  lidawake off            done — sleep normally again
+  ads on             keep running until you turn it off
+  ads on 90          keep running for 90 min, then auto-revert (safer)
+  ads off            done — sleep normally again
 
 Requires an admin password (uses sudo pmset). macOS / Apple Silicon.
 EOF
@@ -175,6 +175,6 @@ case "${1:-help}" in
   on)     shift; cmd_on "${1:-0}" ;;
   off)    cmd_off ;;
   status) cmd_status ;;
-  -v|--version) echo "lidawake $VERSION" ;;
+  -v|--version) echo "adenosine (ads) $VERSION" ;;
   help|-h|--help|*) cmd_help ;;
 esac
