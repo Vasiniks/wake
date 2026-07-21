@@ -27,7 +27,7 @@ mkdir -p "$INSTALL_DIR"
 # broken binary on your PATH.
 tmp="$(mktemp)"
 trap 'rm -f "$tmp"' EXIT
-curl -fL "$REPO/wake" -o "$tmp" || die "download failed from $REPO/wake"
+curl -fsSL "$REPO/wake" -o "$tmp" || die "download failed from $REPO/wake"
 
 # Make sure we got the real script, not a 404 / HTML error page.
 head -1 "$tmp" | grep -q '^#!/usr/bin/env bash' \
