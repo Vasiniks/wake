@@ -11,7 +11,7 @@ macOS can already do this — it's just switched off by default behind a power-m
 One command, no admin password needed:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Vasiniks/lidawake/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/Vasiniks/wake/main/install.sh | bash
 ```
 
 This installs the `wake` command into `~/.local/bin` (which belongs to you), so the install itself never needs `sudo`. If that folder isn't on your `PATH` yet, the installer adds it — just restart Terminal afterward.

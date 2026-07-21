@@ -2,7 +2,7 @@
 #
 # wake installer — no sudo, no clone.
 #
-#   curl -fsSL https://raw.githubusercontent.com/Vasiniks/lidawake/main/install.sh | bash
+#   curl -fsSL https://raw.githubusercontent.com/Vasiniks/wake/main/install.sh | bash
 #
 # Installs the `wake` command into ~/.local/bin (owned by you), so no admin
 # password is needed to install. macOS only asks for a password later, when you
@@ -10,7 +10,7 @@
 #
 set -euo pipefail
 
-REPO="https://raw.githubusercontent.com/Vasiniks/lidawake/main"
+REPO="https://raw.githubusercontent.com/Vasiniks/wake/main"
 INSTALL_DIR="$HOME/.local/bin"
 INSTALL_PATH="$INSTALL_DIR/wake"
 
