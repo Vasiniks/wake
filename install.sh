@@ -60,7 +60,4 @@ if $added_path; then
   echo "  source $SHELL_CONFIG"
   echo ""
 fi
-echo "Then:"
-echo "  wake on 90     # keep awake, lid closed, auto-revert after 90 min"
-echo "  wake status    # check state"
-echo "  wake off       # back to normal"
+"$INSTALL_PATH" help
