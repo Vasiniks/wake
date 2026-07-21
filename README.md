@@ -23,6 +23,8 @@ wake on 90     # stay awake lid-closed, then auto-revert after 90 minutes
 wake on        # stay awake until you turn it off
 wake status    # show current state
 wake off       # back to normal — closing the lid sleeps the Mac
+wake uninstall # revert, then remove wake and its state
+wake help      # show all commands
 ```
 
 Typical flow:
