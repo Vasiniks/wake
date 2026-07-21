@@ -54,6 +54,12 @@ The first time you run `wake on`, macOS asks for your admin password. That's the
 ## Uninstall
 
 ```bash
+wake uninstall
+```
+
+This reverts closed-lid mode first (so it can't leave your Mac unable to sleep), then removes the `wake` command and its `~/.wake` state directory. To do it by hand instead:
+
+```bash
 rm ~/.local/bin/wake
 rm -rf ~/.wake
 ```

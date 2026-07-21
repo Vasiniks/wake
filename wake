@@ -83,6 +83,21 @@ stop_sudo_keepalive() {
   fi
 }
 
+# Absolute path to this script, so `uninstall` removes the file that's running
+# whether it was invoked by name (via PATH) or by a relative/absolute path.
+resolve_self() {
+  local p="$0"
+  if [[ "$p" != */* ]]; then
+    p="$(command -v "$p" 2>/dev/null || true)"
+  fi
+  [[ -n "$p" ]] || return 1
+  case "$p" in
+    /*) : ;;
+    *)  p="$(cd "$(dirname "$p")" 2>/dev/null && pwd)/$(basename "$p")" ;;
+  esac
+  printf '%s\n' "$p"
+}
+
 # ---- commands --------------------------------------------------------------
 
 cmd_on() {
@@ -150,6 +165,27 @@ cmd_status() {
   fi
 }
 
+cmd_uninstall() {
+  require_macos
+
+  # Never leave the Mac unable to sleep after the tool is gone.
+  if is_disabled || caffeinate_running; then
+    info "Reverting closed-lid mode before uninstalling…"
+    cmd_off
+  fi
+
+  rm -rf "$STATE_DIR"
+
+  local self
+  if self="$(resolve_self)" && [[ -f "$self" ]]; then
+    info "Removing $self"
+    rm -f "$self"
+  fi
+
+  info "wake uninstalled."
+  info "(If your shell config still has a ~/.local/bin PATH line, it's harmless to leave.)"
+}
+
 cmd_help() {
   cat <<EOF
 wake $VERSION — run your MacBook lid-closed, on battery, no dongle.
@@ -158,6 +194,7 @@ USAGE
   wake on [MINUTES]   enable closed-lid mode; optional auto-revert timer
   wake off            disable and return to normal sleep
   wake status         show current state
+  wake uninstall      revert, then remove wake and its state
   wake help           this text
 
 EXAMPLES
@@ -172,9 +209,10 @@ EOF
 # ---- dispatch --------------------------------------------------------------
 
 case "${1:-help}" in
-  on)     shift; cmd_on "${1:-0}" ;;
-  off)    cmd_off ;;
-  status) cmd_status ;;
+  on)        shift; cmd_on "${1:-0}" ;;
+  off)       cmd_off ;;
+  status)    cmd_status ;;
+  uninstall) cmd_uninstall ;;
   -v|--version) echo "wake $VERSION" ;;
   help|-h|--help|*) cmd_help ;;
 esac
