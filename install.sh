@@ -1,25 +1,25 @@
 #!/usr/bin/env bash
 #
-# adenosine installer — no sudo, no clone.
+# wake installer — no sudo, no clone.
 #
 #   curl -fsSL https://raw.githubusercontent.com/Vasiniks/lidawake/main/install.sh | bash
 #
-# Installs the `ads` command into ~/.local/bin (owned by you), so no admin
+# Installs the `wake` command into ~/.local/bin (owned by you), so no admin
 # password is needed to install. macOS only asks for a password later, when you
-# run `ads on`, because pmset needs it to change the lid-sleep policy.
+# run `wake on`, because pmset needs it to change the lid-sleep policy.
 #
 set -euo pipefail
 
 REPO="https://raw.githubusercontent.com/Vasiniks/lidawake/main"
 INSTALL_DIR="$HOME/.local/bin"
-INSTALL_PATH="$INSTALL_DIR/ads"
+INSTALL_PATH="$INSTALL_DIR/wake"
 
 die() { printf 'install: %s\n' "$*" >&2; exit 1; }
 
-[[ "$(uname -s)" == "Darwin" ]] || die "adenosine is macOS-only."
+[[ "$(uname -s)" == "Darwin" ]] || die "wake is macOS-only."
 command -v curl >/dev/null 2>&1 || die "curl is required but not found."
 
-echo "Installing adenosine (ads)…"
+echo "Installing wake…"
 
 mkdir -p "$INSTALL_DIR"
 
@@ -27,11 +27,11 @@ mkdir -p "$INSTALL_DIR"
 # broken binary on your PATH.
 tmp="$(mktemp)"
 trap 'rm -f "$tmp"' EXIT
-curl -fL "$REPO/ads" -o "$tmp" || die "download failed from $REPO/ads"
+curl -fL "$REPO/wake" -o "$tmp" || die "download failed from $REPO/wake"
 
 # Make sure we got the real script, not a 404 / HTML error page.
 head -1 "$tmp" | grep -q '^#!/usr/bin/env bash' \
-  || die "downloaded file doesn't look like ads — aborting."
+  || die "downloaded file doesn't look like wake — aborting."
 
 chmod +x "$tmp"
 mv "$tmp" "$INSTALL_PATH"
@@ -53,7 +53,7 @@ if [[ ":$PATH:" != *":$INSTALL_DIR:"* ]]; then
 fi
 
 echo ""
-echo "✓ adenosine installed to $INSTALL_PATH"
+echo "✓ wake installed to $INSTALL_PATH"
 echo ""
 if $added_path; then
   echo "Added ~/.local/bin to your PATH. Restart Terminal, or run:"
@@ -61,6 +61,6 @@ if $added_path; then
   echo ""
 fi
 echo "Then:"
-echo "  ads on 90     # keep awake, lid closed, auto-revert after 90 min"
-echo "  ads status    # check state"
-echo "  ads off       # back to normal"
+echo "  wake on 90     # keep awake, lid closed, auto-revert after 90 min"
+echo "  wake status    # check state"
+echo "  wake off       # back to normal"
