@@ -18,6 +18,7 @@ STATE_DIR="${HOME}/.wake"
 PID_FILE="${STATE_DIR}/caffeinate.pid"
 WATCHDOG_PID_FILE="${STATE_DIR}/watchdog.pid"
 KEEPALIVE_PID_FILE="${STATE_DIR}/keepalive.pid"
+TIMER_FILE="${STATE_DIR}/timer"   # "START_EPOCH TOTAL_MINUTES" for a timed session
 
 mkdir -p "$STATE_DIR"
 
@@ -25,6 +26,18 @@ mkdir -p "$STATE_DIR"
 
 err()  { printf 'wake: %s\n' "$*" >&2; }
 info() { printf '%s\n' "$*"; }
+
+# Format a duration in seconds as H:MM:SS (or M:SS when under an hour).
+fmt_clock() {
+  local s=$1
+  (( s < 0 )) && s=0
+  local h=$(( s / 3600 )) m=$(( (s % 3600) / 60 )) sec=$(( s % 60 ))
+  if (( h > 0 )); then
+    printf '%d:%02d:%02d' "$h" "$m" "$sec"
+  else
+    printf '%d:%02d' "$m" "$sec"
+  fi
+}
 
 require_macos() {
   if [[ "$(uname -s)" != "Darwin" ]]; then
@@ -121,6 +134,7 @@ cmd_on() {
     start_sudo_keepalive "$minutes"
     ( sleep $(( minutes * 60 )); "$0" off >/dev/null 2>&1 ) &
     echo $! > "$WATCHDOG_PID_FILE"
+    printf '%s %s\n' "$(date +%s)" "$minutes" > "$TIMER_FILE"
     info "ON. Will auto-revert after ${minutes} min. Close the lid whenever."
   else
     info "ON. Closed-lid mode active on battery. Run 'wake off' when done."
@@ -145,6 +159,7 @@ cmd_off() {
     kill "$(cat "$WATCHDOG_PID_FILE")" 2>/dev/null || true
     rm -f "$WATCHDOG_PID_FILE"
   fi
+  rm -f "$TIMER_FILE"
   info "OFF. Your Mac will sleep normally when the lid closes."
 }
 
@@ -161,7 +176,18 @@ cmd_status() {
     info "idle guard:      not running"
   fi
   if [[ -f "$WATCHDOG_PID_FILE" ]] && kill -0 "$(cat "$WATCHDOG_PID_FILE")" 2>/dev/null; then
-    info "auto-revert:     armed (pid $(cat "$WATCHDOG_PID_FILE"))"
+    if [[ -f "$TIMER_FILE" ]]; then
+      local start total_min elapsed total remaining
+      read -r start total_min < "$TIMER_FILE"
+      elapsed=$(( $(date +%s) - start ))
+      total=$(( total_min * 60 ))
+      remaining=$(( total - elapsed ))
+      (( elapsed < 0 )) && elapsed=0
+      (( remaining < 0 )) && remaining=0
+      info "auto-revert:     armed — $(fmt_clock "$elapsed") / $(fmt_clock "$total") elapsed ($(fmt_clock "$remaining") left)"
+    else
+      info "auto-revert:     armed (pid $(cat "$WATCHDOG_PID_FILE"))"
+    fi
   fi
 }
 
